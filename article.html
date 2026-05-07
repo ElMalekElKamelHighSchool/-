@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عرض المقال | الملك الكامل</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <style>
+        body { font-family: 'Cairo', sans-serif; background: #f1f5f9; }
+        .article-content { line-height: 2; font-size: 1.1rem; color: #334155; white-space: pre-wrap; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <nav class="bg-blue-900 text-white p-4 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-2 font-black hover:text-yellow-500 transition">
+                <i class="fas fa-arrow-right"></i> العودة للرئيسية
+            </a>
+            <img src="https://www.image2url.com/r2/default/images/1778151852690-93c3f74c-5bda-488c-bee6-558d7bb5e84f.jpg" class="h-10 rounded">
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-10 max-w-4xl">
+        <div id="loading" class="text-center py-20">
+            <div class="animate-spin inline-block w-12 h-12 border-4 border-blue-900 border-t-transparent rounded-full"></div>
+            <p class="mt-4 font-bold text-blue-900">جاري تحميل المقال...</p>
+        </div>
+
+        <article id="mainContent" class="hidden animate__animated animate__fadeIn">
+            <div id="imgBox" class="rounded-3xl overflow-hidden shadow-2xl mb-8 hidden">
+                <img id="artImg" class="w-full h-auto max-h-[500px] object-cover">
+            </div>
+
+            <div class="bg-white p-8 md:p-12 rounded-3xl shadow-sm">
+                <div class="flex items-center gap-3 mb-6">
+                    <span id="artTag" class="bg-red-700 text-white px-4 py-1 rounded-full text-xs font-black"></span>
+                    <span id="artDate" class="text-gray-400 text-sm"></span>
+                </div>
+                
+                <h1 id="artTitle" class="text-3xl md:text-5xl font-black text-blue-900 mb-8 leading-tight"></h1>
+                
+                <div id="artDesc" class="article-content"></div>
+
+                <div class="mt-12 pt-8 border-t border-gray-100 flex justify-between items-center">
+                    <button onclick="window.print()" class="text-gray-400 hover:text-blue-900"><i class="fas fa-print"></i> طباعة الخبر</button>
+                    <div class="flex gap-4">
+                        <span class="text-sm font-bold text-gray-500">شارك الخبر:</span>
+                        <a id="shareFB" href="#" class="text-blue-600"><i class="fab fa-facebook"></i></a>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer class="text-center py-10 text-gray-400 font-bold">
+        <p>مدرسة الملك الكامل العسكرية بنين - المركز الإعلامي</p>
+    </footer>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCSwNiOHDC0m6zoBx_BeAGyaE33Zmhuvi4",
+            authDomain: "hazoma-60ed2.firebaseapp.com",
+            projectId: "hazoma-60ed2",
+            storageBucket: "hazoma-60ed2.firebasestorage.app",
+            messagingSenderId: "962438384604",
+            appId: "1:962438384604:web:52db16e5723a8f6d3bdd19"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const articleId = urlParams.get('id');
+
+        async function loadArticle() {
+            if(!articleId) { window.location.href = 'index.html'; return; }
+            
+            try {
+                const doc = await db.collection('articles').doc(articleId).get();
+                if(!doc.exists) { alert('المقال غير موجود'); return; }
+                
+                const a = doc.data();
+                document.title = a.title + " | الملك الكامل";
+                document.getElementById('artTitle').innerText = a.title;
+                document.getElementById('artTag').innerText = a.tag || 'خبر';
+                document.getElementById('artDate').innerText = a.date;
+                document.getElementById('artDesc').innerText = a.desc;
+
+                if(a.image && a.image.trim() !== "") {
+                    document.getElementById('imgBox').classList.remove('hidden');
+                    document.getElementById('artImg').src = a.image;
+                }
+
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+                document.getElementById('shareFB').href = `https://www.facebook.com/sharer/sharer.php?u=${window.location.href}`;
+
+            } catch (error) {
+                console.error(error);
+                alert('حدث خطأ أثناء تحميل المقال');
+            }
+        }
+        loadArticle();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+</body>
+</html>
