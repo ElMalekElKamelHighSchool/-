@@ -2,88 +2,63 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>الجدول الرسمي | الملك الكامل</title>
+    <title>طباعة الجدول الرسمي</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <style>
         body { font-family: 'Cairo', sans-serif; padding: 20px; background: white; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 2px solid #000; padding: 12px; text-align: center; font-weight: bold; font-size: 14px; }
-        th { background: #f3f4f6; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; border: 2px solid black; }
+        th, td { border: 1px solid black; padding: 12px; text-align: center; font-weight: bold; }
+        th { background: #f0f0f0; color: #001f3f; }
         @media print { .no-print { display: none; } }
     </style>
 </head>
 <body>
-    <div class="no-print mb-8 flex justify-between bg-blue-900 text-white p-4 rounded-xl">
-        <span>عرض نسخة الطباعة النهائية</span>
-        <button onclick="window.print()" class="bg-white text-blue-900 px-4 py-1 rounded font-bold">إبدأ الطباعة الآن</button>
+    <div class="no-print bg-blue-900 text-white p-4 mb-6 flex justify-between rounded-lg">
+        <span>معاينة الجدول الدراسي</span>
+        <button onclick="window.print()" class="bg-yellow-500 text-black px-4 py-1 rounded font-bold">طباعة الجدول <i class="fas fa-print"></i></button>
     </div>
 
-    <div class="border-4 border-black p-6">
-        <div class="flex justify-between items-center border-b-4 border-black pb-6 mb-6">
-            <div class="text-right">
-                <p>مديرية التربية والتعليم بالدقهلية</p>
-                <p>إدارة شرق المنصورة التعليمية</p>
-                <p class="font-black text-xl">مدرسة الملك الكامل العسكرية بنين</p>
-            </div>
-            <img src="https://i.ibb.co/VYBqDDR/1778149653479.jpg" class="h-24">
-            <div class="text-center">
-                <h1 id="grade-title" class="text-2xl font-black underline">جدول الحصص الأسبوعي</h1>
-                <p id="update-date" class="text-sm italic"></p>
-            </div>
-        </div>
+    <div class="text-center border-4 border-double border-black p-6">
+        <h1 class="text-2xl font-black mb-2">مدرسة الملك الكامل الثانوية العسكرية بنين</h1>
+        <h2 id="gradeTitle" class="text-xl font-bold text-red-700 mb-6 underline"></h2>
+        
+        <div id="tableContainer"></div>
 
-        <div id="lessons-target"></div>
-        <div class="mt-10" id="teachers-target"></div>
-
-        <div class="grid grid-cols-3 mt-16 text-center font-black gap-4">
-            <div>
-                <p>رئيس الكنترول</p>
-                <p class="mt-6" id="sign-control">........</p>
-            </div>
-            <div>
-                <p>وكيل شؤون الطلاب</p>
-                <p class="mt-6" id="sign-vice">........</p>
-            </div>
-            <div>
-                <p>مدير المدرسة</p>
-                <p class="mt-6" id="sign-principal">........</p>
-            </div>
+        <div class="grid grid-cols-3 mt-12 text-center font-bold">
+            <div>يعتمد،، مدير المدرسة</div>
+            <div>وكيل شؤون الطلاب</div>
+            <div>رئيس الكنترول</div>
         </div>
     </div>
 
     <script>
-        const firebaseConfig = { /* ... ضع بياناتك هنا ... */ };
+        const firebaseConfig = {
+            apiKey: "AIzaSyCSwNiOHDC0m6zoBx_BeAGyaE33Zmhuvi4",
+            authDomain: "hazoma-60ed2.firebaseapp.com",
+            projectId: "hazoma-60ed2",
+            storageBucket: "hazoma-60ed2.firebasestorage.app",
+            messagingSenderId: "962438384604",
+            appId: "1:962438384604:web:52db16e5723a8f6d3bdd19"
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const grade = urlParams.get('grade') || 'grade1';
+        const params = new URLSearchParams(window.location.search);
+        const grade = params.get('grade');
 
-        async function loadContent() {
-            // جلب الجدول
+        async function load() {
             const doc = await db.collection('schedules').doc(grade).get();
             if(doc.exists) {
-                document.getElementById('grade-title').innerText = "جدول حصص " + (grade === 'grade1' ? 'الصف الأول' : grade === 'grade2' ? 'الصف الثاني' : 'الصف الثالث');
-                document.getElementById('lessons-target').innerHTML = doc.data().lessons;
-                document.getElementById('teachers-target').innerHTML = `
-                    <h3 class="bg-gray-200 p-2 font-black mb-2 border-2 border-black">قائمة السادة معلمي المواد</h3>
-                    ${doc.data().teachers}
-                `;
-                document.getElementById('update-date').innerText = "آخر تحديث: " + doc.data().updatedAt;
-            }
-
-            // جلب التوقيعات
-            const sig = await db.collection('settings').doc('signatures').get();
-            if(sig.exists) {
-                document.getElementById('sign-control').innerText = sig.data().control;
-                document.getElementById('sign-vice').innerText = sig.data().vice;
-                document.getElementById('sign-principal').innerText = sig.data().principal;
+                const data = doc.data();
+                document.getElementById('gradeTitle').innerText = "جدول حصص " + (grade === 'grade1' ? 'الصف الأول' : grade === 'grade2' ? 'الصف الثاني' : 'الصف الثالث');
+                document.getElementById('tableContainer').innerHTML = data.lessons;
+            } else {
+                document.body.innerHTML = "<h1>عذراً، الجدول غير متاح حالياً</h1>";
             }
         }
-        loadContent();
+        load();
     </script>
 </body>
 </html>
