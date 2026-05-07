@@ -5,37 +5,16 @@
     <title>إنشاء حساب | مدرسة الملك الكامل</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Cairo', sans-serif; }</style>
 </head>
-<body class="bg-gradient-to-br from-blue-900 to-black min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-lg p-8 rounded-3xl shadow-2xl">
-        <h2 class="text-3xl font-black text-blue-900 text-center mb-6">إنشاء حساب جديد</h2>
-        
+<body class="bg-gradient-to-br from-blue-900 to-black min-h-screen flex items-center justify-center font-['Cairo'] p-4">
+    <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md">
+        <h2 class="text-2xl font-black text-center text-blue-900 mb-6">إنشاء حساب جديد</h2>
         <form id="signupForm" class="space-y-4">
-            <select id="role" class="w-full p-3 rounded-xl border-2 border-gray-100 outline-none focus:border-blue-900" required>
-                <option value="">أنا (طالب / ولي أمر)</option>
-                <option value="student">طالب بالمدرسة</option>
-                <option value="parent">ولي أمر</option>
-            </select>
-
-            <input type="text" id="fullName" placeholder="الاسم الرباعي" class="w-full p-3 rounded-xl border-2 border-gray-100 outline-none focus:border-blue-900" required>
-            <input type="email" id="email" placeholder="البريد الإلكتروني (Gmail)" class="w-full p-3 rounded-xl border-2 border-gray-100 outline-none focus:border-blue-900" required>
-            <input type="password" id="pass" placeholder="كلمة المرور" class="w-full p-3 rounded-xl border-2 border-gray-100 outline-none focus:border-blue-900" required>
-            
-            <div id="studentExtra" class="hidden">
-                <select id="grade" class="w-full p-3 rounded-xl border-2 border-blue-50 bg-blue-50">
-                    <option value="1sec">الصف الأول الثانوي</option>
-                    <option value="2sec">الصف الثاني الثانوي</option>
-                    <option value="3sec">الصف الثالث الثانوي</option>
-                </select>
-            </div>
-
-            <button type="submit" class="w-full bg-blue-900 text-white font-bold py-4 rounded-xl hover:bg-blue-800 transition shadow-lg">
-                إنشاء الحساب والدخول فوراً
-            </button>
+            <input type="text" id="name" placeholder="الاسم الرباعي" class="w-full p-3 border-2 rounded-xl outline-none focus:border-blue-900" required>
+            <input type="email" id="email" placeholder="البريد الإلكتروني" class="w-full p-3 border-2 rounded-xl outline-none focus:border-blue-900" required>
+            <input type="password" id="pass" placeholder="كلمة المرور" class="w-full p-3 border-2 rounded-xl outline-none focus:border-blue-900" required>
+            <button type="submit" class="w-full bg-yellow-500 text-blue-900 font-bold py-3 rounded-xl hover:bg-yellow-400 transition">إنشاء الحساب</button>
         </form>
-        
-        <p class="text-center mt-6 text-gray-600">لديك حساب بالفعل؟ <a href="login.html" class="text-blue-900 font-bold underline">سجل دخولك</a></p>
     </div>
 
     <script type="module">
@@ -43,35 +22,26 @@
         import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
         import { doc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-        const roleSelect = document.getElementById('role');
-        roleSelect.onchange = () => {
-            document.getElementById('studentExtra').classList.toggle('hidden', roleSelect.value !== 'student');
-        };
-
         document.getElementById('signupForm').onsubmit = async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const pass = document.getElementById('pass').value;
-            const role = roleSelect.value;
+            const name = document.getElementById('name').value;
 
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
                 const user = userCredential.user;
+                const role = email.endsWith('@admin.com') ? 'admin' : 'student';
 
-                // حفظ البيانات في Firestore فوراً
                 await setDoc(doc(db, "users", user.uid), {
-                    fullName: document.getElementById('fullName').value,
+                    fullName: name,
+                    email: email,
                     role: role,
-                    grade: role === 'student' ? document.getElementById('grade').value : "parent_mode",
                     createdAt: new Date()
                 });
 
-                alert("تم إنشاء الحساب بنجاح! جاري تحويلك...");
-                window.location.href = role === 'student' ? 'dashboard.html' : 'parent-dashboard.html';
-                
-            } catch (error) {
-                alert("خطأ: " + error.message);
-            }
+                window.location.href = (role === 'admin') ? 'admin-dashboard.html' : 'dashboard.html';
+            } catch (error) { alert("حدث خطأ: " + error.message); }
         };
     </script>
 </body>
