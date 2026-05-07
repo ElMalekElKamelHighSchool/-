@@ -1,0 +1,31 @@
+<!-- الجزء البرمجي لـ signup.html -->
+<script type="module">
+    import { auth, db, createUserWithEmailAndPassword, sendEmailVerification, setDoc, doc } from './config.js';
+
+    document.getElementById('signupForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const role = document.getElementById('role').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            const userRef = await createUserWithEmailAndPassword(auth, email, password);
+            await sendEmailVerification(userRef.user);
+
+            await setDoc(doc(db, "users", userRef.user.uid), {
+                fullName: document.getElementById('fullName').value,
+                role: role,
+                grade: (role === 'student') ? document.getElementById('grade').value : document.getElementById('sonGrade').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value,
+                isVerified: false,
+                status: "pending" // لا يفعل إلا بعد الإيميل
+            });
+
+            alert("تم إرسال كود التفعيل لإيميلك! لن يعمل الحساب إلا بعد الضغط على الرابط.");
+            window.location.href = "login.html";
+        } catch (error) {
+            alert("خطأ: الإيميل مستخدم بالفعل أو كلمة المرور ضعيفة");
+        }
+    };
+</script>
