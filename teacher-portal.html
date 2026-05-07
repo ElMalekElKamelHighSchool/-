@@ -1,0 +1,12 @@
+// كود ذكي لتوجيه المنشورات بناءً على صلاحية المعلم
+async function postToGrade(grade, content) {
+    if (userRole === 'admin_posts' || userSubject === 'math') {
+        await addDoc(collection(db, "announcements"), {
+            targetGrade: grade, // 1sec or 2sec or 3sec
+            teacherName: auth.currentUser.displayName,
+            message: content,
+            date: serverTimestamp()
+        });
+        alert("تم النشر لطلاب الصف " + toArabicNum(grade[0]));
+    }
+}
