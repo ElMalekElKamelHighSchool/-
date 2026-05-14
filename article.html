@@ -10,12 +10,49 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <style>
         body { font-family: 'Cairo', sans-serif; background: #f1f5f9; }
-        .article-content { line-height: 2; font-size: 1.1rem; color: #334155; white-space: pre-wrap; }
+        
+        /* تحسين عرض محتوى المقال */
+        .article-content { 
+            line-height: 2; 
+            font-size: 1.15rem; 
+            color: #1e293b; 
+            white-space: pre-wrap; 
+            word-wrap: break-word;
+        }
+
+        /* تنسيقات الطباعة */
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; padding: 0 !important; }
+            .container { max-width: 100% !important; width: 100% !important; padding: 0 !important; }
+            .bg-white { box-shadow: none !important; padding: 0 !important; }
+            #imgBox { box-shadow: none !important; margin-bottom: 20px !important; }
+            #artImg { 
+                max-height: none !important; 
+                width: 100% !important; 
+                height: auto !important; 
+                object-fit: contain !important; 
+                border-radius: 10px !important;
+            }
+            .article-content { font-size: 12pt; color: black; }
+            #print-footer { display: block !important; }
+            @page { margin: 1.5cm; }
+        }
+
+        /* منع قص الصورة في العرض العادي */
+        #artImg {
+            width: 100%;
+            height: auto;
+            max-height: 70vh; /* لا يتعدى 70% من طول الشاشة */
+            object-fit: contain; /* يضمن ظهور الصورة كاملة دون قص */
+            background: #f8fafc;
+        }
     </style>
 </head>
 <body class="min-h-screen">
 
-    <nav class="bg-blue-900 text-white p-4 shadow-lg sticky top-0 z-50">
+    <!-- نافبار - يختفي عند الطباعة -->
+    <nav class="bg-blue-900 text-white p-4 shadow-lg sticky top-0 z-50 no-print">
         <div class="container mx-auto flex justify-between items-center">
             <a href="index.html" class="flex items-center gap-2 font-black hover:text-yellow-500 transition">
                 <i class="fas fa-arrow-right"></i> العودة للرئيسية
@@ -25,42 +62,61 @@
     </nav>
 
     <main class="container mx-auto px-4 py-10 max-w-4xl">
-        <div id="loading" class="text-center py-20">
+        <!-- شاشة التحميل -->
+        <div id="loading" class="text-center py-20 no-print">
             <div class="animate-spin inline-block w-12 h-12 border-4 border-blue-900 border-t-transparent rounded-full"></div>
             <p class="mt-4 font-bold text-blue-900">جاري تحميل المقال...</p>
         </div>
 
         <article id="mainContent" class="hidden animate__animated animate__fadeIn">
-            <div id="imgBox" class="rounded-3xl overflow-hidden shadow-2xl mb-8 hidden">
-                <img id="artImg" class="w-full h-auto max-h-[500px] object-cover">
+            <!-- صندوق الصورة - معدل ليظهر الصورة كاملة -->
+            <div id="imgBox" class="rounded-3xl overflow-hidden shadow-2xl mb-8 hidden border border-gray-100">
+                <img id="artImg" alt="صورة المقال">
             </div>
 
-            <div class="bg-white p-8 md:p-12 rounded-3xl shadow-sm">
+            <div class="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-gray-50">
                 <div class="flex items-center gap-3 mb-6">
                     <span id="artTag" class="bg-red-700 text-white px-4 py-1 rounded-full text-xs font-black"></span>
-                    <span id="artDate" class="text-gray-400 text-sm"></span>
+                    <span id="artDate" class="text-gray-400 text-sm font-bold"></span>
                 </div>
                 
                 <h1 id="artTitle" class="text-3xl md:text-5xl font-black text-blue-900 mb-8 leading-tight"></h1>
                 
                 <div id="artDesc" class="article-content"></div>
 
-                <div class="mt-12 pt-8 border-t border-gray-100 flex justify-between items-center">
-                    <button onclick="window.print()" class="text-gray-400 hover:text-blue-900"><i class="fas fa-print"></i> طباعة الخبر</button>
-                    <div class="flex gap-4">
+                <!-- تذييل المقال - أزرار تختفي عند الطباعة -->
+                <div class="mt-12 pt-8 border-t border-gray-100 flex justify-between items-center no-print">
+                    <button onclick="window.print()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-2 rounded-xl font-bold transition flex items-center gap-2">
+                        <i class="fas fa-print"></i> طباعة الخبر
+                    </button>
+                    <div class="flex items-center gap-4">
                         <span class="text-sm font-bold text-gray-500">شارك الخبر:</span>
-                        <a id="shareFB" href="#" class="text-blue-600"><i class="fab fa-facebook"></i></a>
+                        <a id="shareFB" href="#" target="_blank" class="text-blue-600 text-2xl hover:scale-110 transition"><i class="fab fa-facebook"></i></a>
+                    </div>
+                </div>
+
+                <!-- حقوق التطوير - تظهر فقط عند الطباعة أو أسفل الصفحة -->
+                <div id="print-footer" class="mt-10 pt-6 border-t-2 border-dashed border-gray-200 flex justify-between items-center">
+                    <div class="text-right">
+                        <p class="text-blue-900 font-black text-sm">مدرسة الملك الكامل الثانوية العسكرية</p>
+                        <p class="text-gray-400 text-[10px] font-bold uppercase">Official Media Center</p>
+                    </div>
+                    <div class="text-left">
+                        <span class="text-[10px] text-gray-400 block font-bold uppercase">Developed by</span>
+                        <span class="text-sm font-black text-blue-800">Hazem Salem</span>
                     </div>
                 </div>
             </div>
         </article>
     </main>
 
-    <footer class="text-center py-10 text-gray-400 font-bold">
-        <p>مدرسة الملك الكامل العسكرية بنين - المركز الإعلامي</p>
+    <!-- فوتر الموقع - يختفي عند الطباعة -->
+    <footer class="text-center py-10 text-gray-400 font-bold no-print">
+        <p>جميع الحقوق محفوظة © مدرسة الملك الكامل - 2026</p>
     </footer>
 
     <script>
+        // إعدادات Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCSwNiOHDC0m6zoBx_BeAGyaE33Zmhuvi4",
             authDomain: "hazoma-60ed2.firebaseapp.com",
@@ -72,6 +128,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        // جلب معرف المقال من الرابط
         const urlParams = new URLSearchParams(window.location.search);
         const articleId = urlParams.get('id');
 
@@ -80,31 +137,52 @@
             
             try {
                 const doc = await db.collection('articles').doc(articleId).get();
-                if(!doc.exists) { alert('المقال غير موجود'); return; }
+                
+                if(!doc.exists) { 
+                    document.getElementById('loading').innerHTML = `
+                        <div class="text-red-500 font-black text-xl">المقال غير موجود أو تم حذفه</div>
+                        <a href="index.html" class="text-blue-600 underline mt-4 block">العودة للرئيسية</a>
+                    `;
+                    return; 
+                }
                 
                 const a = doc.data();
+                
+                // تعبئة البيانات في الصفحة
                 document.title = a.title + " | الملك الكامل";
                 document.getElementById('artTitle').innerText = a.title;
                 document.getElementById('artTag').innerText = a.tag || 'خبر';
-                document.getElementById('artDate').innerText = a.date;
+                document.getElementById('artDate').innerText = a.date || '';
                 document.getElementById('artDesc').innerText = a.desc;
 
+                // معالجة الصورة
                 if(a.image && a.image.trim() !== "") {
-                    document.getElementById('imgBox').classList.remove('hidden');
-                    document.getElementById('artImg').src = a.image;
+                    const imgElement = document.getElementById('artImg');
+                    imgElement.src = a.image;
+                    
+                    // الانتظار حتى تحميل الصورة لضمان عدم حدوث مشاكل في الأبعاد
+                    imgElement.onload = () => {
+                        document.getElementById('imgBox').classList.remove('hidden');
+                    };
                 }
 
+                // إظهار المحتوى وإخفاء شاشة التحميل
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('mainContent').classList.remove('hidden');
-                document.getElementById('shareFB').href = `https://www.facebook.com/sharer/sharer.php?u=${window.location.href}`;
+                
+                // تحديث رابط المشاركة
+                document.getElementById('shareFB').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`;
 
             } catch (error) {
-                console.error(error);
-                alert('حدث خطأ أثناء تحميل المقال');
+                console.error("Error fetching article:", error);
+                document.getElementById('loading').innerHTML = `<p class="text-red-600 font-bold">حدث خطأ أثناء الاتصال بقاعدة البيانات</p>`;
             }
         }
+
         loadArticle();
     </script>
+    
+    <!-- الروابط الخارجية للمكتبات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 </body>
