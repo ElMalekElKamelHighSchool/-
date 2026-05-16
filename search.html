@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة الاستعلام عن رقم الجلوس | مدرسة الملك الكامل</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col justify-between p-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900 via-slate-900 to-black">
+
+    <!-- زر العودة للرئيسية -->
+    <div class="max-w-4xl w-full mx-auto pt-4">
+        <a href="index.html" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl border border-white/10 transition font-bold text-amber-500">
+            <i class="fas fa-arrow-right"></i> العودة للرئيسية
+        </a>
+    </div>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="max-w-xl w-full mx-auto bg-slate-800/50 backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-3xl shadow-2xl my-auto">
+        <div class="text-center mb-6">
+            <div class="w-20 h-20 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-amber-500/10">
+                <i class="fas fa-id-card"></i>
+            </div>
+            <h1 class="text-2xl font-black text-white">مدرسة الملك الكامل الثانوية العسكرية</h1>
+            <p class="text-slate-400 text-sm mt-1">الاستعلام الرسمي عن أرقام الجلوس ومقار اللجان لعام 2026</p>
+        </div>
+
+        <!-- اختيار الصف اختياري لتسريع البحث وضمان الدقة -->
+        <div class="mb-4">
+            <label class="block text-xs font-bold text-slate-400 mb-2">اختر الصف الدراسي:</label>
+            <div class="grid grid-cols-3 gap-2">
+                <label class="cursor-pointer border border-white/10 p-3 rounded-xl text-center block font-bold text-sm bg-slate-700/30 has-[:checked]:border-amber-500 has-[:checked]:text-amber-400 transition">
+                    <input type="radio" name="searchGrade" value="1sec" checked class="hidden"> الأول
+                </label>
+                <label class="cursor-pointer border border-white/10 p-3 rounded-xl text-center block font-bold text-sm bg-slate-700/30 has-[:checked]:border-amber-500 has-[:checked]:text-amber-400 transition">
+                    <input type="radio" name="searchGrade" value="2sec" class="hidden"> الثاني
+                </label>
+                <label class="cursor-pointer border border-white/10 p-3 rounded-xl text-center block font-bold text-sm bg-slate-700/30 has-[:checked]:border-amber-500 has-[:checked]:text-amber-400 transition">
+                    <input type="radio" name="searchGrade" value="3sec" class="hidden"> الثالث
+                </label>
+            </div>
+        </div>
+
+        <!-- حقل الإدخال -->
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-400 mb-2">الرقم القومي للطالب (14 رقم من واقع شهادة الميلاد أو البطاقة):</label>
+                <div class="relative">
+                    <input type="text" id="nationalIDInput" maxlength="14" placeholder="2990101XXXXXXXX" 
+                           class="w-full bg-slate-900/80 border-2 border-white/10 p-4 rounded-xl text-center text-xl font-mono tracking-widest text-amber-400 font-bold focus:outline-none focus:border-amber-500 transition">
+                    <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-500 font-mono text-xs" id="charCount">0/14</div>
+                </div>
+            </div>
+
+            <button onclick="searchStudent()" id="searchBtn" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-black py-4 rounded-xl text-lg transition duration-300 shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2">
+                <i class="fas fa-search"></i> استعلام الآن
+            </button>
+        </div>
+
+        <!-- منطقة عرض النتيجة -->
+        <div id="resultArea" class="mt-6 hidden pt-6 border-t border-white/10 space-y-4"></div>
+    </main>
+
+    <!-- مودال قائمة الانتظار الذكية -->
+    <div id="waitingModal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-slate-800 border border-white/10 p-6 rounded-3xl max-w-md w-full shadow-2xl relative space-y-4">
+            <button onclick="toggleModal(false)" class="absolute top-4 left-4 text-slate-400 hover:text-white text-xl"><i class="fas fa-times"></i></button>
+            <div class="w-16 h-16 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-2 animate-pulse">
+                <i class="fas fa-bell"></i>
+            </div>
+            <h3 class="text-xl font-black text-center text-white">البيانات لم تُرفع بعد!</h3>
+            <p class="text-slate-300 text-sm text-center leading-relaxed">
+                عذراً، لم يقم المسؤول برفع بيانات هذا الصف الدراسي بعد إلى النظام السحابي لمدرسة الملك الكامل. يمكنك إدخال بريدك الإلكتروني بالأسفل لتصلك رسالة إشعار فورية بمجرد اعتماد أرقام الجلوس.
+            </p>
+            <div class="space-y-2">
+                <label class="block text-xs font-bold text-slate-400">البريد الإلكتروني (Gmail):</label>
+                <input type="email" id="waitingEmail" placeholder="yourname@gmail.com" class="w-full bg-slate-900 border border-white/10 p-3 rounded-xl text-center text-white focus:outline-none focus:border-blue-500">
+            </div>
+            <button onclick="registerInWaitingList()" id="modalBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2">
+                <i class="fas fa-paper-plane"></i> حفظ وإرسال تنبيه آلي لاحقاً
+            </button>
+        </div>
+    </div>
+
+    <footer class="text-center p-4 text-slate-500 text-xs border-t border-white/5 w-full">
+        جميع الحقوق محفوظة © مدرسة الملك الكامل الثانوية العسكرية 2026
+    </footer>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCSwNiOHDC0m6zoBx_BeAGyaE33Zmhuvi4",
+            authDomain: "hazoma-60ed2.firebaseapp.com",
+            projectId: "hazoma-60ed2",
+            storageBucket: "hazoma-60ed2.firebasestorage.app",
+            messagingSenderId: "962438384604",
+            appId: "1:962438384604:web:52db16e5723a8f6d3bdd19"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // تحديث عداد الأرقام تلقائياً لراحة المستخدم
+        document.getElementById('nationalIDInput').addEventListener('input', function(e) {
+            document.getElementById('charCount').innerText = `${e.target.value.length}/14`;
+        });
+
+        // تشغيل الاستعلام الفوري في حال وجود معاملات بالرابط القادم من الـ QR
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const idParam = urlParams.get('nationalID');
+            const gradeParam = urlParams.get('g');
+            if (idParam && idParam.length === 14) {
+                document.getElementById('nationalIDInput').value = idParam;
+                document.getElementById('charCount').innerText = "14/14";
+                if(gradeParam) {
+                    const radio = document.querySelector(`input[name="searchGrade"][value="${gradeParam}"]`);
+                    if(radio) radio.checked = true;
+                }
+                searchStudent();
+            }
+        }
+
+        function toggleModal(show) {
+            document.getElementById('waitingModal').classList.toggle('hidden', !show);
+        }
+
+        // دالة البحث الأساسية بالاعتماد على الرقم القومي
+        async function searchStudent() {
+            const nationalID = document.getElementById('nationalIDInput').value.trim();
+            const grade = document.querySelector('input[name="searchGrade"]:checked').value;
+            const resultArea = document.getElementById('resultArea');
+            const btn = document.getElementById('searchBtn');
+
+            if (nationalID.length !== 14 || isNaN(nationalID)) {
+                return alert("⚠️ يرجى إدخال الرقم القومي صحيحاً ومكوناً من 14 رقماً.");
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner animate-spin"></i> جاري الفحص...`;
+            resultArea.classList.add('hidden');
+            resultArea.innerHTML = '';
+
+            try {
+                const docRef = db.collection(`results_${grade}`).doc(nationalID);
+                const doc = await docRef.get();
+
+                if (doc.exists) {
+                    const studentData = doc.data();
+                    let htmlContent = `
+                        <div class="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl text-center">
+                            <span class="text-xs font-bold text-amber-400 block mb-1">اسم الطـالب</span>
+                            <h2 class="text-xl font-black text-white">${studentData['الاسم'] || studentData['اسم الطالب']}</h2>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-slate-900/60 border border-white/5 p-4 rounded-xl text-center">
+                                <span class="text-xs text-slate-400 block mb-1">رقم الجلوس</span>
+                                <span class="text-2xl font-black text-amber-400">${studentData['رقم الجلوس'] || 'غير مدرج'}</span>
+                            </div>
+                            <div class="bg-slate-900/60 border border-white/5 p-4 rounded-xl text-center">
+                                <span class="text-xs text-slate-400 block mb-1">مقر اللجنة</span>
+                                <span class="text-base font-bold text-white">${studentData['اللجنة'] || studentData['مقر اللجنة'] || 'مقر المدرسة'}</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900/40 p-4 rounded-2xl border border-white/5 space-y-2 text-sm">
+                            <span class="text-xs font-bold text-slate-400 block border-b border-white/5 pb-1">بيانات إضافية من ملف الكشف:</span>
+                    `;
+
+                    // قراءة بقية الأعمدة تلقائياً وترتيبها ديناميكياً بناءً على رؤوس كشف الإكسيل المرفوع
+                    Object.keys(studentData).forEach(key => {
+                        if (!['الاسم', 'اسم الطالب', 'رقم الجلوس', 'اللجنة', 'مقر اللجنة', 'nationalID', 'grade'].includes(key)) {
+                            htmlContent += `
+                                <div class="flex justify-between items-center py-1">
+                                    <span class="text-slate-400">${key}:</span>
+                                    <span class="font-bold text-slate-200">${studentData[key]}</span>
+                                </div>`;
+                        }
+                    });
+
+                    htmlContent += `</div>`;
+                    resultArea.innerHTML = htmlContent;
+                    resultArea.classList.remove('hidden');
+                } else {
+                    // فتح مودال الإشعار والانتظار في حال عدم العثور على السجل
+                    toggleModal(true);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("❌ حدث خطأ في الاتصال بقاعدة البيانات. يرجى المحاولة لاحقاً.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-search"></i> استعلام الآن`;
+            }
+        }
+
+        // تسجيل الطالب في قائمة الانتظار وربط البريد بالرقم القومي
+        async function registerInWaitingList() {
+            const nationalID = document.getElementById('nationalIDInput').value.trim();
+            const email = document.getElementById('waitingEmail').value.trim();
+            const grade = document.querySelector('input[name="searchGrade"]:checked').value;
+            const modalBtn = document.getElementById('modalBtn');
+
+            if (!email || !email.includes('@')) {
+                return alert("⚠️ يرجى إدخال بريد إلكتروني صحيح.");
+            }
+
+            modalBtn.disabled = true;
+            modalBtn.innerHTML = `<i class="fas fa-spinner animate-spin"></i> جاري الحفظ...`;
+
+            try {
+                await db.collection("pending_emails").doc(nationalID).set({
+                    nationalID: nationalID,
+                    email: email,
+                    grade: grade,
+                    registeredAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                alert("✅ تم إدراجك بنجاح! ستصلك رسالة تلقائية فور رفع الكشوف واعتمادها.");
+                toggleModal(false);
+                document.getElementById('waitingEmail').value = '';
+            } catch (e) {
+                alert("❌ فشل التسجيل. حاول مرة أخرى.");
+            } finally {
+                modalBtn.disabled = false;
+                modalBtn.innerHTML = `<i class="fas fa-paper-plane"></i> حفظ وإرسال تنبيه آلي لاحقاً`;
+            }
+        }
+    </script>
+</body>
+</html>
+
