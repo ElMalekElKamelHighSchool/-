@@ -162,7 +162,7 @@
                 <i class="fas fa-gift"></i>
             </div>
             <h3 class="text-3xl font-black text-blue-950 mb-2 fancy-header">تهنئة رسمية خاصة</h3>
-            <p class="text-gray-400 font-bold mb-4">بمناسبة الأجندة الزمنية الرسمية لجمهورية مصر العربية</p>
+            <p class="text-gray-400 font-bold mb-4">العطلات الرسمية لجمهورية مصر العربية</p>
             <div class="bg-amber-50 p-6 rounded-2xl border border-amber-200 mb-6">
                 <h4 id="greetingHolidayName" class="text-2xl font-black text-amber-700 mb-2">اسم العيد السعيد</h4>
                 <p class="text-sm font-bold text-blue-900 leading-relaxed">تتقدم إدارة مدرسة الملك الكامل الثانوية العسكرية بخالص التهاني والتبريكات لجموع الشعب المصري العظيم وطلابنا الأوفياء بمناسبة اليوم السعيد. كل عام وأنتم بخير!</p>
@@ -181,12 +181,12 @@
                 <!-- الهجري فوق يمين -->
                 <div id="hijriDate" class="text-amber-600 font-black flex items-center gap-2 text-[15px]">
                     <i class="fas fa-moon animate__animated animate__pulse animate__infinite"></i>
-                    <span>جاري مزامنة التقويم الهجري الفعلي...</span>
+                    <span>جاري مزامنة التقويم الهجري ...</span>
                 </div>
                 <!-- الميلادي تحت يمين -->
                 <div id="gregorianDate" class="text-blue-900/80 font-bold flex items-center gap-2 text-xs">
                     <i class="fas fa-calendar-day text-blue-900 text-[10px]"></i>
-                    <span>جاري تحميل التاريخ الميلادي السيادي...</span>
+                    <span>جاري تحميل التاريخ الميلادي ...</span>
                 </div>
             </div>
             
@@ -531,12 +531,12 @@
                         fetchPrayersFromAPI(position.coords.latitude, position.coords.longitude, "المنصورة (حسب موقعك الجغرافي المتصل)");
                     },
                     (error) => {
-                        fetchPrayersFromAPI(defaultLat, defaultLng, "مدينة المنصورة (بوابة الملك الكامل السيادية)");
+                        fetchPrayersFromAPI(defaultLat, defaultLng, "مدينة المنصورة (بوابة الملك الكامل )");
                     },
                     { enableHighAccuracy: true, timeout: 4000 }
                 );
             } else {
-                fetchPrayersFromAPI(defaultLat, defaultLng, "مدينة المنصورة (بوابة الملك الكامل السيادية)");
+                fetchPrayersFromAPI(defaultLat, defaultLng, "مدينة المنصورة (بوابة الملك الكامل )");
             }
         }
 
